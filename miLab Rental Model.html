@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miLab BCM — Private Market Financial Model</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; padding: 24px 16px; }
+.page { max-width: 900px; margin: 0 auto; }
+.header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.noul-badge { background: #0284c7; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; letter-spacing: 0.04em; white-space: nowrap; }
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; color: #0f172a; }
+.subtitle { font-size: 13px; color: #64748b; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.mc { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.ml { font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: 600; }
+.mv { font-size: 20px; font-weight: 700; color: #0f172a; }
+.ms { font-size: 12px; color: #94a3b8; margin-top: 5px; line-height: 1.4; }
+.custom-select, .custom-input { width: 100%; padding: 8px 12px; font-size: 16px; font-weight: 600; color: #0f172a; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: all 0.2s; }
+.custom-select:focus, .custom-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+.input-wrapper { display: flex; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+.input-wrapper:focus-within { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+.curr-symbol { padding: 8px 0 8px 12px; font-size: 16px; font-weight: 600; color: #64748b; background: transparent; }
+.input-wrapper .custom-input { border: none; background: transparent; box-shadow: none; }
+.card { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+.sec { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 16px; font-weight: 700; }
+.slider-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+.slider-row label { font-size: 14px; color: #334155; min-width: 280px; font-weight: 500; }
+.slider-row input[type=range] { flex: 1; accent-color: #0284c7; }
+.sv { font-size: 14px; font-weight: 700; min-width: 100px; text-align: right; color: #0284c7; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+th { font-size: 12px; font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; }
+td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tr.summary td { background: #f8fafc; font-weight: 700; border-bottom: none; border-top: 2px solid #e2e8f0; color: #0f172a; }
+tr.gain td { background: #ecfdf5; font-weight: 700; border-bottom: none; }
+.tg { background: #dcfce7; color: #16a34a; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.tr { background: #fee2e2; color: #dc2626; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.ta { background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.note { font-size: 12px; color: #64748b; margin-top: 12px; line-height: 1.6; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #cbd5e1; }
+.verdict { border-radius: 8px; padding: 16px 20px; font-size: 15px; font-weight: 600; line-height: 1.5; }
+.footer { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px; }
+@media (max-width: 640px) {
+  .slider-row { flex-wrap: wrap; }
+  .slider-row label { min-width: 100%; margin-bottom: 5px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header-bar">
+  <span class="noul-badge">miLab BCM</span>
+  <div>
+    <h1>European Private Market Financial Simulator</h1>
+    <p class="subtitle">Models rental profitability for one device based on country-specific reimbursement rates and labor costs.</p>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="mc">
+    <p class="ml">Target Country / Market</p>
+    <select id="s-country" class="custom-select">
+      <option value="CH">🇨🇭 Switzerland (GP In-house Lab / P-Flag)</option>
+      <option value="UK">🇬🇧 United Kingdom (Private Clinic / Self-pay)</option>
+      <option value="DE">🇩🇪 Germany (Private Insurance / GOÄ)</option>
+    </select>
+    <p class="ms" id="desc-country">Swiss Analysenliste maximum tariff applied</p>
+  </div>
+  <div class="mc">
+    <p class="ml">Insurance Reimbursement / Test</p>
+    <div class="input-wrapper">
+      <span class="curr-symbol sym"></span>
+      <input type="number" id="i-reimb" class="custom-input" step="0.1">
+    </div>
+    <p class="ms">Editable — enter local tariff</p>
+  </div>
+  <div class="mc">
+    <p class="ml">Lab Technician Hourly Rate</p>
+    <div class="input-wrapper">
+      <span class="curr-symbol sym"></span>
+      <input type="number" id="i-hourly" class="custom-input" step="0.5">
+    </div>
+    <p class="ms">Local market hourly rate (editable)</p>
+  </div>
+  <div class="mc" style="background: #f0f9ff; border-color: #bae6fd;">
+    <p class="ml" style="color: #0284c7;">Annual Test Volume</p>
+    <div class="input-wrapper" style="border-color: #7dd3fc; background: #e0f2fe;">
+      <input type="number" id="i-cap" class="custom-input" step="100" min="100" max="10000" value="1000"
+             style="background: transparent; text-align: center; font-size: 20px; color: #0369a1;">
+    </div>
+    <p class="ms" style="color: #0ea5e9;">Tests / yr — editable</p>
+  </div>
+</div>
+
+<div class="card">
+  <p class="sec">Cost & Time Variables</p>
+  <div class="slider-row">
+    <label>miLab Cartridge Rental Price (<span class="sym"></span> / Test) <span style="color:#0284c7;font-size:12px;margin-left:5px;">← key variable</span></label>
+    <input type="range" min="1" max="40" step="0.5" value="9.0" id="s-cart">
+    <span class="sv"><span class="sym"></span> <span id="v-cart">9.00</span></span>
+  </div>
+  <div class="slider-row">
+    <label>Current Reagent Cost / Test (<span class="sym"></span>)</label>
+    <input type="range" min="0.50" max="5" step="0.25" value="1.50" id="s-reag">
+    <span class="sv"><span class="sym"></span> <span id="v-reag">1.50</span></span>
+  </div>
+  <div class="slider-row">
+    <label>Manual Microscopy Time (min / Test)</label>
+    <input type="range" min="5" max="25" step="1" value="15" id="s-time">
+    <span class="sv" style="color: #475569;"><span id="v-time">15</span> min</span>
+  </div>
+</div>
+
+<div class="card">
+  <p class="sec">Per-Test Economics</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%">Item</th>
+        <th style="width:24%;text-align:right;color:#dc2626">Current Method</th>
+        <th style="width:24%;text-align:right;color:#16a34a">With miLab BCM</th>
+        <th style="width:12%;text-align:right">Diff</th>
+      </tr>
+    </thead>
+    <tbody id="per-test-body"></tbody>
+  </table>
+  <div class="note" id="pt-formula"></div>
+</div>
+
+<div class="card">
+  <p class="sec">Annual Economics — <span id="cap-label">1,000</span> Tests / yr</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%">Item</th>
+        <th style="width:24%;text-align:right;color:#dc2626">Current Method</th>
+        <th style="width:24%;text-align:right;color:#16a34a">With miLab BCM</th>
+        <th style="width:12%;text-align:right">Diff</th>
+      </tr>
+    </thead>
+    <tbody id="annual-body"></tbody>
+  </table>
+  <div class="note" id="ann-formula"></div>
+</div>
+
+<div class="card">
+  <p class="sec">5-Year Cumulative Margin — Current Method vs miLab BCM Rental Model</p>
+  <div style="display:flex;gap:20px;margin-bottom:15px;font-size:13px;color:#475569;flex-wrap:wrap;justify-content:center;">
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#ef4444;display:inline-block"></span>Current Method (cumulative)</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#0284c7;display:inline-block"></span>miLab BCM (cumulative)</span>
+  </div>
+  <div style="position:relative;width:100%;height:320px;">
+    <canvas id="margin-chart"></canvas>
+  </div>
+  <div class="note" id="chart-note"></div>
+</div>
+
+<div id="verdict-wrap" class="card" style="margin-bottom:0; border: none; padding: 0;"></div>
+
+<p class="footer">miLab BCM Reagent Rental Simulation &nbsp;·&nbsp; European Market Analysis 2026</p>
+
+</div>
+
+<script>
+const countryData = {
+  'CH': {
+    name: 'Switzerland', curr: 'CHF',
+    desc: 'Based on Swiss Analysenliste (pos. 1374.00 + 1266.00). Target: contracted labs & P-Flag GPs.',
+    reimb: 32.40, hourly: 45.00, reag: 1.50, time: 15
+  },
+  'UK': {
+    name: 'United Kingdom', curr: '£',
+    desc: 'Private clinic / self-pay FBC billing. High reimbursement environment.',
+    reimb: 56.00, hourly: 25.00, reag: 1.20, time: 15
+  },
+  'DE': {
+    name: 'Germany', curr: '€',
+    desc: 'GOÄ private insurance / specialty clinic rate (CBC + Morphology ×1.15).',
+    reimb: 11.37, hourly: 35.00, reag: 1.00, time: 15
+  }
+};
+
+let chart = null;
+
+const elCountry = document.getElementById('s-country');
+const elDesc    = document.getElementById('desc-country');
+const elReimb   = document.getElementById('i-reimb');
+const elHourly  = document.getElementById('i-hourly');
+const elCap     = document.getElementById('i-cap');
+const elCart    = document.getElementById('s-cart');
+const elReag    = document.getElementById('s-reag');
+const elTime    = document.getElementById('s-time');
+
+function updateSymbols(curr) {
+  document.querySelectorAll('.sym').forEach(el => el.textContent = curr);
+}
+
+function loadCountryData() {
+  const cd = countryData[elCountry.value];
+  updateSymbols(cd.curr);
+  elDesc.textContent = cd.desc;
+  elReimb.value  = cd.reimb.toFixed(2);
+  elHourly.value = cd.hourly.toFixed(2);
+  elReag.value   = cd.reag.toFixed(2);
+  elTime.value   = cd.time;
+  updateCalc();
+}
+
+function fmt(n, d=2) {
+  const curr = countryData[elCountry.value].curr;
+  const s = Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+  return (n < 0 ? '− ' : '') + curr + '\u00a0' + s;
+}
+function fmt0(n) { return fmt(n, 0); }
+
+function tag(n, d=2) {
+  if (n >  0.005) return `<span class="tg">+ ${fmt(n,d)}</span>`;
+  if (n < -0.005) return `<span class="tr">− ${fmt(Math.abs(n),d)}</span>`;
+  return `<span class="ta">—</span>`;
+}
+
+function row(label, wo, wi, diff, last, gain, d=2) {
+  const wc  = wo < 0 ? '#dc2626' : wo > 0 ? '#0f172a' : '#94a3b8';
+  const mc  = wi < 0 ? '#dc2626' : wi > 0 ? '#0f172a' : '#94a3b8';
+  const cls = gain ? 'gain' : last ? 'summary' : '';
+  const ws  = (wo===0 && !last && !gain) ? '—' : fmt(wo,d);
+  const ms  = (wi===0 && !last && !gain) ? '—' : fmt(wi,d);
+  return `<tr class="${cls}">
+    <td style="color:#334155">${label}</td>
+    <td style="text-align:right;color:${wc}">${ws}</td>
+    <td style="text-align:right;color:${mc}">${ms}</td>
+    <td style="text-align:right">${diff ? tag(wi-wo,d) : ''}</td>
+  </tr>`;
+}
+
+function updateCalc() {
+  const reimb  = parseFloat(elReimb.value)  || 0;
+  const hourly = parseFloat(elHourly.value) || 0;
+  const cart   = parseFloat(elCart.value)   || 0;
+  const reag   = parseFloat(elReag.value)   || 0;
+  const tmin   = parseFloat(elTime.value)   || 0;
+  const CAP    = parseInt(elCap.value)      || 1000;
+  const curr   = countryData[elCountry.value].curr;
+
+  document.getElementById('v-cart').textContent = cart.toFixed(2);
+  document.getElementById('v-reag').textContent = reag.toFixed(2);
+  document.getElementById('v-time').textContent = tmin;
+  document.getElementById('cap-label').textContent = CAP.toLocaleString();
+
+  const laborCost   = (tmin / 60) * hourly;
+  const currMargin  = reimb - reag - laborCost;
+  const milabMargin = reimb - cart;
+  const currAnn     = currMargin * CAP;
+  const milabAnn    = milabMargin * CAP;
+  const gainAnn     = milabAnn - currAnn;
+
+  document.getElementById('per-test-body').innerHTML =
+    row('Insurance Reimbursement', reimb, reimb, false, false, false) +
+    row('Reagent / Cartridge Cost', -reag, -cart, false, false, false) +
+    row('Manual Labor Cost / Test', -laborCost, 0, false, false, false) +
+    row('Net Margin / Test', currMargin, milabMargin, true, true, false);
+
+  document.getElementById('pt-formula').innerHTML =
+    `<b>Current:</b> ${fmt(reimb)} reimb − ${fmt(reag)} reagent − ${fmt(laborCost)} labor (${tmin} min × ${fmt(hourly)}/hr) = <b>${fmt(currMargin)}</b><br>` +
+    `<b style="color:#0284c7">miLab:</b> ${fmt(reimb)} reimb − ${fmt(cart)} cartridge = <b style="color:#0284c7">${fmt(milabMargin)}</b>`;
+
+  document.getElementById('annual-body').innerHTML =
+    row('Annual Reimbursement Revenue', reimb*CAP, reimb*CAP, false, false, false, 0) +
+    row('Annual Reagent / Cartridge Cost', -reag*CAP, -cart*CAP, false, false, false, 0) +
+    row('Annual Manual Labor Cost', -laborCost*CAP, 0, false, false, false, 0) +
+    row('Annual Net Margin', currAnn, milabAnn, true, true, false, 0) +
+    row('Annual Gain vs. Current Method', 0, gainAnn, true, false, true, 0);
+
+  document.getElementById('ann-formula').innerHTML =
+    `<b>Annual margin</b> = net margin per test × ${CAP.toLocaleString()} tests/yr`;
+
+  // 5-year cumulative chart
+  const years     = [1,2,3,4,5];
+  const currCumul = years.map(y => Math.round(currAnn * y));
+  const milabCumul= years.map(y => Math.round(milabAnn * y));
+  if (chart) {
+    chart.data.datasets[0].data = currCumul;
+    chart.data.datasets[1].data = milabCumul;
+    chart.options.scales.y.ticks.callback = v => curr + '\u00a0' + (v/1000).toFixed(0) + 'k';
+    chart.options.plugins.tooltip.callbacks.label = ctx => {
+      const labels = ['Current Method', 'miLab BCM'];
+      return ` ${labels[ctx.datasetIndex]}: ${curr}\u00a0${ctx.parsed.y.toLocaleString('en-US')}`;
+    };
+    chart.update();
+  } else {
+    chart = new Chart(document.getElementById('margin-chart'), {
+      type: 'line',
+      data: {
+        labels: ['Year 1','Year 2','Year 3','Year 4','Year 5'],
+        datasets: [
+          { label: 'Current Method', data: currCumul,
+            borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.07)',
+            borderWidth: 2.5, pointBackgroundColor: '#ef4444', pointRadius: 5,
+            fill: false, tension: 0.2 },
+          { label: 'miLab BCM', data: milabCumul,
+            borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.07)',
+            borderWidth: 2.5, pointBackgroundColor: '#0284c7', pointRadius: 5,
+            fill: false, tension: 0.2 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index', intersect: false,
+            callbacks: {
+              label: ctx => {
+                const labels = ['Current Method','miLab BCM'];
+                return ` ${labels[ctx.datasetIndex]}: ${curr}\u00a0${ctx.parsed.y.toLocaleString('en-US')}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { font: { size: 13, weight: '600' } }, grid: { display: false } },
+          y: { ticks: { font: { size: 11 },
+                        callback: v => curr + '\u00a0' + (v/1000).toFixed(0) + 'k' },
+               grid: { color: '#e2e8f0' } }
+        },
+        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+      }
+    });
+  }
+
+  document.getElementById('chart-note').innerHTML =
+    `<b>5-year totals</b> — Current method: <b>${fmt0(currAnn*5)}</b> &nbsp;|&nbsp; ` +
+    `miLab BCM: <b style="color:#0284c7">${fmt0(milabAnn*5)}</b> &nbsp;|&nbsp; ` +
+    `Difference: <b style="color:#10b981">${fmt0(gainAnn*5)}</b>`;
+
+  const mpct = reimb > 0 ? Math.round((milabMargin / reimb) * 100) : 0;
+  const breakEvenCart = reimb - reag - laborCost;
+  let msg, bg, tc, bc;
+
+  if (milabMargin < 0) {
+    msg = `⚠️ At a cartridge price of ${fmt(cart)}, the hospital loses money on every test. Price must stay below the reimbursement rate of ${fmt(reimb)}.`;
+    bg = '#fef2f2'; tc = '#991b1b'; bc = '#fca5a5';
+  } else if (gainAnn < 0) {
+    msg = `🤔 At ${fmt(cart)}/cartridge, miLab annual margin (${fmt0(milabAnn)}) is lower than the current method (${fmt0(currAnn)}). To make the business case, cartridge price should be at or below <b>${fmt(breakEvenCart)}</b>.`;
+    bg = '#fffbeb'; tc = '#92400e'; bc = '#fde68a';
+  } else {
+    msg = `✅ <b>Clear Win.</b> At ${fmt(cart)}/cartridge, the site earns a <b>${mpct}% margin</b> and gains <b>${fmt0(gainAnn)}/yr</b> over the current method by eliminating manual labor. 5-year cumulative gain: <b style="color:#10b981">${fmt0(gainAnn*5)}</b>.`;
+    bg = '#f0fdf4'; tc = '#166534'; bc = '#86efac';
+  }
+
+  document.getElementById('verdict-wrap').innerHTML =
+    `<div class="verdict" style="background:${bg}; color:${tc}; border:1px solid ${bc};">${msg}</div>`;
+}
+
+elCountry.addEventListener('change', loadCountryData);
+[elReimb, elHourly, elCap, elCart, elReag, elTime].forEach(el => el.addEventListener('input', updateCalc));
+
+loadCountryData();
+</script>
+
+</body>
+</html>
